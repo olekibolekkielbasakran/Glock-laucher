@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="pl"><head><meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://api.modrinth.com https://api.mcsrvstat.us; img-src 'self' file: data: https://cdn.modrinth.com https://minotar.net; style-src 'self' 'unsafe-inline'; script-src 'self'; base-uri 'none'; form-action 'none'">
+<title>Glock-launcher</title>
+<style>
+:root{--accent:#3d6bff;--accent-d:#2a4fd1;--accent-l:#7d9bff;--text:#eef1f6;--muted:#8a93a3;--warn:#ffc15a;--bad:#ff7a6e;--line:rgba(255,255,255,.07);--bg:#000;--panel:#05070d;--card:#080c16;--card-2:#0c1426}
+*{box-sizing:border-box;margin:0}html,body{height:100%}
+body{font:14px/1.5 "Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,"Ubuntu","Cantarell","Noto Sans","Inter","Roboto","Helvetica Neue",Arial,sans-serif;color:var(--text);background:var(--bg);overflow:hidden}
+h1,h2,.go,.vi b,.brand{font-family:"Segoe UI Variable Display","Segoe UI",system-ui,-apple-system,"Ubuntu","Cantarell","Noto Sans","Inter","Roboto","Helvetica Neue",Arial,sans-serif;font-weight:600}
+.app{height:100%;display:grid;grid-template-columns:76px minmax(420px,1fr) 380px;gap:12px;padding:12px}
+.pn{display:flex;flex-direction:column;min-height:0;padding:16px;border-radius:20px;border:1px solid var(--line);background:var(--panel);box-shadow:0 16px 44px rgba(0,0,0,.42)}
+.scroll{flex:1;min-height:0;overflow-y:auto}
+::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:8px}::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.22)}
+:focus-visible{outline:2px solid var(--warn);outline-offset:2px}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.rail{align-items:center;gap:6px;padding:14px 0;overflow-y:auto;overflow-x:hidden}
+.rail::-webkit-scrollbar{width:0;height:0}
+.cube{width:42px;height:42px;flex:none;border-radius:13px;display:grid;place-items:center;background:linear-gradient(135deg,var(--accent),var(--accent-d));margin-bottom:16px;box-shadow:0 8px 20px -6px var(--accent)}
+.cube svg{width:24px;height:24px;stroke:#fff;fill:none;stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.rb{width:46px;height:46px;border-radius:13px;display:grid;place-items:center;background:none;border:0;color:var(--muted);cursor:pointer;transition:all .2s ease;flex:none}
+.rb svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:transform .2s}
+.rb:hover{background:rgba(255,255,255,.06);color:var(--text)}.rb:hover svg{transform:scale(1.1)}
+.rb[aria-selected=true]{background:linear-gradient(135deg,var(--accent),var(--accent-d));color:#fff;box-shadow:0 6px 20px -4px var(--accent);transform:scale(1.05)}
+.main{padding:0}.main .scroll{padding:20px 22px 22px}
+.view{display:none}.view.on{display:block;animation:fadeIn .4s cubic-bezier(0.2,0.8,0.2,1) forwards}
+.page-head{margin-bottom:14px}#hello{font-size:24px;letter-spacing:-.4px;margin-top:10px}
+.hero{position:relative;height:280px;border-radius:20px;overflow:hidden;border:1px solid rgba(255,255,255,.05);background:linear-gradient(180deg,rgba(7,9,14,.2),rgba(7,9,14,.6) 55%,rgba(7,9,14,.98)),url(bg.png) center/cover;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:inset 0 0 60px rgba(0,0,0,.85),0 10px 30px rgba(0,0,0,.4)}
+.hero::after{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% 50%,transparent 30%,rgba(7,9,14,.95) 100%);pointer-events:none}
+.hero-title{font-size:46px;font-weight:800;letter-spacing:-1.5px;background:linear-gradient(to bottom,#ffffff 20%,#a0aab8 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 6px 16px rgba(0,0,0,.8));z-index:1;animation:float 5s ease-in-out infinite}
+.hero-bar{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);display:flex;align-items:center;gap:12px;padding:8px 14px;border-radius:12px;background:rgba(7,9,14,.6);border:1px solid rgba(255,255,255,.1);backdrop-filter:blur(16px);white-space:nowrap;max-width:calc(100% - 28px);z-index:2;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+#hsub{color:#cfd7e3;font-size:13px;overflow:hidden;text-overflow:ellipsis;font-weight:500}
+.play-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:14px}
+.go{padding:14px 46px;font-size:17px;font-weight:800;letter-spacing:.5px;color:#fff;border:0;border-radius:14px;cursor:pointer;background:linear-gradient(135deg,var(--accent-l),var(--accent-d));box-shadow:0 10px 30px -8px var(--accent),inset 0 2px 0 rgba(255,255,255,.3);transition:all .2s ease;text-shadow:0 1px 2px rgba(0,0,0,.2)}
+.go:hover:not(:disabled){background:linear-gradient(135deg,#a0b8ff,var(--accent));box-shadow:0 14px 40px -6px var(--accent),inset 0 2px 0 rgba(255,255,255,.4);transform:translateY(-2px)}
+.go:active:not(:disabled){transform:translateY(1px);box-shadow:0 4px 15px -4px var(--accent)}
+.go:disabled{background:rgba(255,255,255,.1);color:var(--muted);cursor:default;box-shadow:none;text-shadow:none}
+.chip{padding:6px 14px;border-radius:99px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);font-size:12px;color:var(--muted);box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+.chip b{color:var(--text);font-weight:600}
+.bar{height:6px;margin-top:14px;border-radius:6px;background:rgba(0,0,0,.5);overflow:hidden;box-shadow:inset 0 1px 3px rgba(0,0,0,.5)}
+.bar i{display:block;height:100%;width:0;border-radius:6px;background:linear-gradient(90deg,var(--accent-d),var(--accent-l));transition:width .2s ease;box-shadow:0 0 10px var(--accent)}
+#status{margin-top:10px;min-height:22px;color:var(--muted);font-size:13px;font-weight:500}
+#status.err{color:var(--bad)}
+.sec-head{display:flex;align-items:baseline;gap:10px;margin:24px 0 12px}
+.sec-head h2{font-size:16px}.sec-head span{color:var(--muted);font-size:12.5px}
+.vi{display:flex;align-items:center;gap:14px;padding:12px;margin-bottom:10px;border-radius:16px;border:1px solid var(--line);background:rgba(255,255,255,.02);cursor:pointer;transition:all .2s ease;flex-wrap:wrap}
+.vi:hover{background:rgba(255,255,255,.05);transform:translateY(-2px);box-shadow:0 8px 20px -10px rgba(0,0,0,.5)}
+.vi[aria-current=true]{border-color:var(--accent);background:rgba(61,107,255,.05);box-shadow:inset 0 0 0 1px var(--accent),0 0 20px -5px var(--accent)}
+.ico{width:48px;height:48px;flex:none;border-radius:14px;display:grid;place-items:center;letter-spacing:.2px;font:700 13px "Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,"Ubuntu","Cantarell","Noto Sans","Inter","Roboto","Helvetica Neue",Arial,sans-serif;color:#fff;background:linear-gradient(135deg,var(--accent-l),var(--accent-d));box-shadow:0 4px 10px rgba(0,0,0,.3)}
+.vi .t{flex:1;min-width:0}.vi .t b{display:block;font-size:15px}.vi .t small{color:var(--muted);font-size:12px}
+.list-actions{display:flex;gap:10px;margin-top:10px;padding-bottom:10px}
+.list-actions .btn{padding:12px 16px;border-radius:12px}
+.btn{padding:9px 15px;font:600 13px "Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,"Ubuntu","Cantarell","Noto Sans","Inter","Roboto","Helvetica Neue",Arial,sans-serif;color:var(--text);cursor:pointer;white-space:nowrap;border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.04);transition:all .2s ease}
+.btn:hover:not(:disabled){background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.15)}
+.btn:disabled{opacity:.5;cursor:default}.btn.w{flex:1}
+.btn.pri{background:linear-gradient(135deg,var(--accent),var(--accent-d));color:#fff;border-color:transparent;box-shadow:0 4px 15px -6px var(--accent)}
+.btn.pri:hover:not(:disabled){background:linear-gradient(135deg,var(--accent-l),var(--accent));box-shadow:0 6px 20px -4px var(--accent);transform:translateY(-1px)}
+.btn.x{background:none;border-color:transparent;color:var(--muted);padding:8px 10px;font-size:16px;line-height:1}
+.btn.x:hover{background:rgba(255,110,90,.15);color:var(--bad)}
+.vi .btn.pri::before{content:"";display:inline-block;width:0;height:0;margin-right:7px;vertical-align:1px;border-left:7px solid currentColor;border-top:4.5px solid transparent;border-bottom:4.5px solid transparent}
+.side{padding:16px}
+.tt{display:flex;gap:4px;padding:4px;border-radius:14px;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.05);margin-bottom:16px;flex:none}
+.tt button{flex:1;padding:10px 8px;border:0;border-radius:10px;background:none;color:var(--muted);cursor:pointer;font:700 13px "Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,"Ubuntu","Cantarell","Noto Sans","Inter","Roboto","Helvetica Neue",Arial,sans-serif;transition:all .2s ease}
+.tt button:hover{color:var(--text)}
+.tt button[aria-selected=true]{background:linear-gradient(135deg,var(--accent),var(--accent-d));color:#fff;box-shadow:0 2px 10px -2px var(--accent)}
+.pane{display:none;flex:1;min-height:0;flex-direction:column}
+.pane.on{display:flex;animation:fadeIn .3s ease forwards}
+.row{display:flex;gap:8px;align-items:center}
+.row input[type=text]{flex:1;min-width:0;width:auto}
+input[type=text],input[type=number],select,textarea{width:100%;padding:10px 14px;font:inherit;color:var(--text);background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.08);border-radius:12px;outline:none;transition:all .2s}
+input[type=text]::placeholder{color:#5d6572}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);background:rgba(0,0,0,.5);box-shadow:0 0 0 2px rgba(61,107,255,.2)}
+option{background:#171a20}
+label{display:block;color:var(--muted);font-size:12.5px;font-weight:500;margin:14px 0 6px}
+.chk{display:flex;gap:10px;align-items:center;cursor:pointer;margin:12px 0;color:var(--muted);font-size:12.5px;transition:color .2s}
+.chk:hover{color:var(--text)}.chk input{accent-color:var(--accent);width:16px;height:16px;cursor:pointer}
+.sub{color:var(--muted);font-size:12.5px}
+.empty{color:var(--muted);text-align:center;padding:30px 16px;font-size:13px;border:1px dashed rgba(255,255,255,.1);border-radius:16px;background:rgba(0,0,0,.15)}
+#servers{margin-top:16px}#count{margin:12px 0 10px}#r-mods select{flex:1;width:auto}
+.srvc{display:flex;gap:12px;align-items:center;padding:12px;margin-bottom:10px;border-radius:16px;border:1px solid var(--line);background:var(--card);transition:all .2s}
+.srvc:hover{transform:translateY(-2px);background:var(--card-2);border-color:rgba(255,255,255,.12);box-shadow:0 8px 20px -10px rgba(0,0,0,.5)}
+.srvc .bn{width:56px;height:56px;flex:none;border-radius:14px;display:grid;place-items:center;padding:4px;overflow:hidden;font:800 11px/1.15 "Segoe UI Variable Display","Segoe UI",system-ui,-apple-system,"Ubuntu","Cantarell","Noto Sans","Inter","Roboto","Helvetica Neue",Arial,sans-serif;color:#fff;text-align:center;word-break:break-all;text-shadow:0 2px 4px rgba(0,0,0,.6);box-shadow:inset 0 0 0 1px rgba(255,255,255,.15);position:relative}
+.srvc .bn img{width:100%;height:100%;object-fit:cover;border-radius:10px}
+.srvc .bn .dot{position:absolute;bottom:2px;right:2px;width:10px;height:10px;border-radius:50%;border:2px solid var(--card);background:#666}
+.srvc .bn .dot.online{background:#2fbf71;box-shadow:0 0 6px #2fbf71}
+.srvc .bn .dot.offline{background:#888}
+.srvc .in{flex:1;min-width:0}
+.srvc code{display:block;color:var(--text);font:600 13px Consolas,monospace;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.srvc .motd{font-size:11.5px;color:var(--muted);margin-bottom:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.srvc .row{gap:6px}
+.card{display:flex;gap:12px;align-items:center;padding:12px;margin-bottom:10px;border-radius:16px;border:1px solid var(--line);background:var(--card);transition:all .2s}
+.card:hover{transform:translateY(-2px);background:var(--card-2);border-color:rgba(255,255,255,.12);box-shadow:0 8px 20px -10px rgba(0,0,0,.5)}
+.card img{width:48px;height:48px;flex:none;border-radius:12px;object-fit:cover;background:rgba(0,0,0,.4);box-shadow:0 4px 10px rgba(0,0,0,.3)}
+.card .t{flex:1;min-width:0}
+.card .t b{display:block;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:2px}
+.card .t span{display:block;color:var(--muted);font-size:11.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.4}
+.form{max-width:520px}
+.form h2{font-size:20px;margin:0 0 4px;letter-spacing:-.5px}
+.ramh{display:flex;justify-content:space-between;align-items:baseline}
+.ramh label{margin:14px 0 0}.ramh output{color:var(--accent-l);font-weight:700;font-size:14px;transition:color .2s}
+.ramh output.warn{color:var(--bad)}
+input[type=range]{width:100%;margin-top:10px;accent-color:var(--accent);cursor:pointer}
+#log{height:calc(100vh - 320px);min-height:200px;padding:14px 16px;border-radius:16px;background:rgba(0,0,0,.4);border:1px solid var(--line);font:12px/1.6 Consolas,monospace;color:#93a0b3;white-space:pre-wrap;word-break:break-all;overflow-y:auto;user-select:text}
+.shots-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+.shot{position:relative;aspect-ratio:16/9;border-radius:12px;overflow:hidden;cursor:pointer;background:var(--card);border:1px solid var(--line)}
+.shot img{width:100%;height:100%;object-fit:cover;transition:transform .2s}
+.shot:hover img{transform:scale(1.05)}
+.shot .del{position:absolute;top:6px;right:6px;background:rgba(0,0,0,.7);border:0;color:#fff;width:26px;height:26px;border-radius:8px;cursor:pointer;opacity:0;transition:opacity .2s}
+.shot:hover .del{opacity:1}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px}
+.stat-card{padding:16px;border-radius:16px;border:1px solid var(--line);background:var(--card)}
+.stat-card b{display:block;font-size:26px;color:var(--accent-l);margin-bottom:4px;letter-spacing:-.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.stat-card small{color:var(--muted);font-size:12px}
+.skin-view{display:flex;gap:24px;padding:24px;background:var(--card);border:1px solid var(--line);border-radius:20px;align-items:flex-end;flex-wrap:wrap}
+.skin-view img{image-rendering:pixelated;border-radius:10px;background:rgba(0,0,0,.4);box-shadow:0 4px 14px rgba(0,0,0,.4)}
+.skin-view > div{text-align:center}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:grid;place-items:center;z-index:100;backdrop-filter:blur(4px);padding:20px}
+.modal[hidden]{display:none}
+.modal-box{background:var(--panel);padding:22px;border-radius:18px;border:1px solid var(--line);width:min(480px,100%);max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.7)}
+.modal-box h3{margin-bottom:16px;font-size:18px;letter-spacing:-.3px}
+.modal-box.wide{width:min(720px,100%)}
+.wb-wrap{display:flex;align-items:center;gap:14px;padding:12px;margin-bottom:10px;border-radius:16px;border:1px solid var(--line);background:var(--card);transition:all .2s}
+.wb-wrap:hover{background:var(--card-2);transform:translateY(-2px)}
+.wb-ic{width:56px;height:56px;flex:none;border-radius:12px;background:linear-gradient(135deg,#3d6bff,#2a4fd1);display:grid;place-items:center;color:#fff;font:700 13px "Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,"Ubuntu","Cantarell","Noto Sans","Inter","Roboto","Helvetica Neue",Arial,sans-serif;overflow:hidden}
+.wb-ic img{width:100%;height:100%;object-fit:cover}
+.wb-info{flex:1;min-width:0}
+.wb-info b{display:block;font-size:14px;margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wb-info small{color:var(--muted);font-size:12px}
+.wb-actions{display:flex;gap:6px;flex-wrap:wrap}
+.acc-bar{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:14px;background:var(--card);border:1px solid var(--line);margin-bottom:10px}
+.acc-bar .avatar{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--accent-l),var(--accent-d));display:grid;place-items:center;font-weight:800;color:#fff;font-size:14px}
+.acc-bar .nm{flex:1;min-width:0}
+.acc-bar .nm b{display:block;font-size:14px}
+.acc-bar .nm small{color:var(--muted);font-size:11.5px}
+.bk-row{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--card);margin-bottom:8px}
+.bk-row .nm{flex:1;min-width:0}
+.bk-row .nm b{display:block;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bk-row .nm small{color:var(--muted);font-size:11px}
+.crash-box{padding:14px 16px;border-radius:14px;border:1px solid rgba(255,120,100,.3);background:rgba(255,80,60,.06);margin-bottom:12px}
+.crash-box.warn{border-color:rgba(255,193,90,.3);background:rgba(255,193,90,.06)}
+.crash-box b{display:block;font-size:14px;margin-bottom:4px;color:#ff9080}
+.crash-box.warn b{color:var(--warn)}
+.crash-box small{display:block;color:var(--muted);font-size:12.5px;line-height:1.5;margin-bottom:8px}
+.crash-box pre{font:11px/1.4 Consolas,monospace;background:rgba(0,0,0,.4);padding:8px 10px;border-radius:8px;overflow-x:auto;color:#889;white-space:pre-wrap}
+.preset-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.preset-row .btn{font-size:11.5px;padding:6px 11px}
+.preset-row .btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent-d));color:#fff;border-color:transparent}
+.wl-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:12px;background:rgba(255,255,255,.02);border:1px solid var(--line);margin-bottom:6px;cursor:pointer;transition:all .15s}
+.wl-row:hover{background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.12)}
+.wl-row img{width:32px;height:32px;border-radius:8px;object-fit:cover;background:rgba(0,0,0,.4)}
+.wl-row .nm{flex:1;min-width:0}
+.wl-row .nm b{display:block;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wl-row .nm small{color:var(--muted);font-size:11px}
+.perf-tip{padding:12px 14px;border-radius:12px;background:rgba(61,107,255,.06);border:1px solid rgba(61,107,255,.2);font-size:12.5px;color:var(--muted);line-height:1.6;margin:14px 0}
+.perf-tip b{color:var(--text)}
+@media (max-width:1180px){.app{grid-template-columns:76px 1fr 330px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+input, textarea, select, [contenteditable] {-webkit-user-select:text !important;user-select:text !important;pointer-events:auto !important;cursor:text !important;color:var(--text) !important;caret-color:var(--accent) !important}
+input[type=range], input[type=checkbox], select {cursor:pointer !important}
+</style>
+<link rel="stylesheet" href="theme.css"></head><body>
+<div class="app">
+  <nav class="pn rail" role="tablist" aria-label="Sekcje">
+    <div class="cube" aria-hidden="true"><img src="icon.png" alt=""></div>
+    <button class="rb" role="tab" data-v="home" data-l="Start" aria-selected="true" title="Start"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h14V10"/></svg></button>
+    <button class="rb" role="tab" data-v="instances" data-l="Instancje" aria-selected="false" title="Instancje"><svg viewBox="0 0 24 24"><path d="M3 7l9-4 9 4v10l-9 4-9-4zM3 7l9 4 9-4M12 11v10"/></svg></button>
+    <button class="rb" role="tab" data-v="accounts" data-l="Konta" aria-selected="false" title="Konta"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2 20v-1a7 7 0 0 1 14 0v1M17 8h.01M17 11h.01M20 8a3 3 0 0 0-3-3"/></svg></button>
+    <button class="rb" role="tab" data-v="worlds" data-l="Światy" aria-selected="false" title="Światy"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></svg></button>
+    <button class="rb" role="tab" data-v="shots" data-l="Zrzuty" aria-selected="false" title="Zrzuty ekranu"><svg viewBox="0 0 24 24"><path d="M3 8h4l2-3h6l2 3h4v12H3z"/><circle cx="12" cy="13" r="4"/></svg></button>
+    <button class="rb" role="tab" data-v="skins" data-l="Skiny" aria-selected="false" title="Skiny"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0 1 16 0v1"/></svg></button>
+    <button class="rb" role="tab" data-v="stats" data-l="Statystyki" aria-selected="false" title="Statystyki"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/></svg></button>
+    <button class="rb" role="tab" data-v="set" data-l="Ustawienia" aria-selected="false" title="Ustawienia"><svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg></button>
+    <button class="rb" role="tab" data-v="logs" data-l="Logi" aria-selected="false" title="Logi"><svg viewBox="0 0 24 24"><path d="M5 5h14v14H5zM8 10l3 2-3 2M13 15h3"/></svg></button>
+    <button class="rb" role="tab" data-v="about" data-l="O programie" aria-selected="false" title="O aplikacji"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v5h1"/></svg></button>
+  </nav>
+
+  <section class="pn main">
+    <div class="scroll">
+      <div class="view on" id="v-home">
+        <header class="page-head"><h1 id="hello">Witaj!</h1></header>
+        <div class="hero">
+          <div class="hero-title">Glock-launcher</div>
+          <div class="hero-bar"><span id="hsub">Minecraft</span></div>
+        </div>
+        <div class="play-row">
+          <button class="go" id="play">GRAJ!</button>
+          <span class="chip">Czas gry: <b id="st-time">0 min</b></span>
+          <span class="chip">Ostatnio: <b id="st-last">-</b></span>
+        </div>
+        <div class="bar"><i id="fill"></i></div><p id="status"></p>
+        <div class="sec-head"><h2>Twoje instalacje</h2><span>wybierz kliknięciem</span>
+          <div class="list-actions">
+            <button class="btn pri" id="manage">Zarządzaj</button>
+            <button class="btn" id="addmods">Dodaj mody</button>
+          </div>
+        </div>
+        <div id="list"></div>
+        <div class="sec-head"><h2>Ostatnie światy</h2></div>
+        <div id="home-worlds"><p class="empty">Brak światów.</p></div>
+      </div>
+
+      <div class="view" id="v-instances">
+        <header class="page-head"><h2 style="font-size:20px;letter-spacing:-.5px">Instancje</h2></header>
+        <p class="sub">Klonowanie, backupy, import i aktualizacje modów.</p>
+        <div class="row" style="margin:14px 0;flex-wrap:wrap">
+          <button class="btn" id="inst-import">Importuj ZIP</button>
+          <button class="btn" id="inst-new">Nowa (z ustawień)</button>
+          <button class="btn" id="open-backups">Backupy</button>
+        </div>
+        <div id="inst-grid"></div>
+      </div>
+
+      <div class="view" id="v-accounts">
+        <header class="page-head"><h2 style="font-size:20px;letter-spacing:-.5px">Konta</h2></header>
+        <p class="sub">Wiele kont offline - przełączaj się między nickami.</p>
+        <form id="acc-form" class="row" style="margin:14px 0" autocomplete="off">
+          <input type="text" id="acc-nick" placeholder="Nick (3-16 znaków)" maxlength="16" spellcheck="false" autocomplete="off" autocapitalize="off" autocorrect="off">
+          <button type="submit" class="btn pri" id="acc-add">Dodaj konto</button>
+        </form>
+        <div id="acc-list"></div>
+      </div>
+
+      <div class="view" id="v-worlds">
+        <header class="page-head"><h2 style="font-size:20px;letter-spacing:-.5px">Światy</h2></header>
+        <div class="row" style="margin:14px 0">
+          <select id="worlds-inst" style="flex:1"></select>
+          <button class="btn" id="worlds-open">Otwórz folder</button>
+        </div>
+        <div id="worlds-list"></div>
+      </div>
+
+      <div class="view" id="v-shots">
+        <header class="page-head"><h2 style="font-size:20px;letter-spacing:-.5px">Zrzuty ekranu</h2></header>
+        <div class="row" style="margin:14px 0">
+          <select id="shots-inst" style="flex:1"></select>
+          <button class="btn" id="shots-open">Otwórz folder</button>
+        </div>
+        <div class="shots-grid" id="shots-grid"></div>
+      </div>
+
+      <div class="view" id="v-skins">
+        <header class="page-head"><h2 style="font-size:20px;letter-spacing:-.5px">Skiny</h2></header>
+        <p class="sub">Podgląd skina aktywnego konta.</p>
+        <div class="skin-view" style="margin-top:14px">
+          <div><img id="skin-head" width="128" height="128" alt=""><p class="sub">Głowa</p></div>
+          <div><img id="skin-body" width="100" height="200" alt=""><p class="sub">Ciało</p></div>
+          <div><img id="skin-full" width="128" height="128" alt=""><p class="sub">Skin</p></div>
+        </div>
+        <div class="row" style="margin-top:14px">
+          <button class="btn" id="skin-refresh">Odśwież</button>
+          <button class="btn" id="skin-download">Pobierz skin</button>
+        </div>
+      </div>
+
+      <div class="view" id="v-stats">
+        <header class="page-head"><h2 style="font-size:20px;letter-spacing:-.5px">Statystyki</h2></header>
+        <div class="stats-grid" id="stats-grid" style="margin-top:14px"></div>
+        <h2 style="font-size:16px;margin-top:24px">Per instancja</h2>
+        <div id="stats-per" style="margin-top:12px"></div>
+      </div>
+
+      <div class="view" id="v-set"><div class="form">
+        <h2>Opcje</h2>
+        <p class="sub">Ustawienia gry i profilu.</p>
+        <label for="nick">Nick (aktywne konto)</label>
+        <input type="text" id="nick" maxlength="16" spellcheck="false" autocomplete="off">
+        <label for="version">Wersja gry</label><select id="version"></select>
+        <label class="chk"><input type="checkbox" id="snap"> Pokaż snapshoty</label>
+        <label for="loader">Loader modów</label><select id="loader"><option value="fabric">Fabric</option><option value="quilt">Quilt</option><option value="vanilla">Brak (czysty Minecraft)</option></select>
+        <div class="ramh"><label for="ram">Pamięć RAM</label><output id="ram-out"></output></div><input type="range" id="ram" min="1" max="16" value="6">
+        <div class="perf-tip">6-8 GB RAM wystarczy, przy większej wartości FPS może spaść (GC). Zostaw 2-4 GB dla systemu.</div>
+        <label for="javaPath">Ścieżka Javy (opcjonalnie)</label>
+        <div class="row"><input type="text" id="javaPath" placeholder="Auto-wykrywanie" spellcheck="false"><button class="btn" id="pick-java">Wybierz</button><button class="btn" id="auto-java">Auto</button></div>
+        <label for="jvmArgs">Argumenty JVM</label>
+        <input type="text" id="jvmArgs" placeholder="-XX:+UseG1GC" spellcheck="false">
+        <div class="preset-row">
+          <button class="btn primary" data-preset="fps">FPS Gaming</button>
+          <button class="btn" data-preset="aikar">Aikar</button>
+          <button class="btn" data-preset="g1gc">G1GC</button>
+          <button class="btn" data-preset="lowend">Low-end</button>
+          <button class="btn" data-preset="zgc">ZGC (J21)</button>
+          <button class="btn" data-preset="clear">Wyczyść</button>
+        </div>
+        <div class="row">
+          <div style="flex:1"><label for="width">Szerokość</label><input type="number" id="width" min="640" max="7680" value="1280"></div>
+          <div style="flex:1"><label for="height">Wysokość</label><input type="number" id="height" min="480" max="4320" value="720"></div>
+        </div>
+        <label class="chk"><input type="checkbox" id="fullscreen"> Pełny ekran</label>
+        <label class="chk"><input type="checkbox" id="minimize" checked> Minimalizuj launcher przy starcie gry</label>
+        <div class="row" style="margin-top:16px"><button class="btn w" id="open-mods">Folder modów</button><button class="btn w" id="open-shots">Zrzuty ekranu</button></div>
+        <label for="accent">Kolor motywu</label><select id="accent"></select>
+        <div class="row" style="margin-top:16px"><button class="btn w" id="reset-settings">Resetuj ustawienia</button></div>
+      </div></div>
+
+      <div class="view" id="v-logs">
+        <h2 style="font-size:20px;letter-spacing:-.5px">Logi gry</h2>
+        <p class="sub" style="margin:4px 0 12px">Tu sprawdzisz, czemu gra się wywaliła.</p>
+        <div class="row" style="margin-bottom:10px;flex-wrap:wrap">
+          <button class="btn" data-logfilter="all">Wszystko</button>
+          <button class="btn" data-logfilter="info">Info</button>
+          <button class="btn" data-logfilter="warn">Warn</button>
+          <button class="btn" data-logfilter="error">Error</button>
+          <button class="btn" id="log-clear">Wyczyść</button>
+          <button class="btn" id="log-save">Zapisz</button>
+          <button class="btn" id="log-copy">Kopiuj</button>
+          <button class="btn pri" id="log-analyze">Analizuj crash</button>
+        </div>
+        <div id="crash-result" style="margin-bottom:10px"></div>
+        <div id="log"></div>
+      </div>
+
+      <div class="view" id="v-about">
+        <header class="page-head"><h2 style="font-size:20px;letter-spacing:-.5px">O aplikacji</h2></header>
+        <div style="max-width:560px;margin-top:14px">
+          <p><b>Glock-launcher</b> v4.3.1</p>
+          <p class="sub" style="margin:8px 0">Launcher Minecrafta: Fabric/Quilt, mody z Modrinth, modpacki, kilka kont offline.</p>
+          <p class="sub" style="margin:8px 0">Electron 31 · minecraft-launcher-core · Modrinth · Fabric · Quilt</p>
+          <p class="sub" style="margin:8px 0">RAM: 6-8 GB wystarczy. Preset „FPS Gaming" skraca pauzy GC. Launcher minimalizuje się przy starcie gry.</p>
+          <div class="row" style="margin-top:16px;flex-wrap:wrap">
+            <button class="btn" data-url="https://modrinth.com">Modrinth</button>
+            <button class="btn" data-url="https://fabricmc.net">Fabric</button>
+            <button class="btn" data-url="https://quiltmc.org">Quilt</button>
+            <button class="btn" data-url="https://www.minecraft.net">Minecraft</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="pn side">
+    <div class="tt" role="tablist">
+      <button role="tab" data-r="srv" aria-selected="false">Serwery</button>
+      <button role="tab" data-r="mods" aria-selected="true">Mody</button>
+    </div>
+    <div class="pane" id="r-srv">
+      <div class="row"><input type="text" id="srv-ip" placeholder="Adres serwera" spellcheck="false"><button class="btn pri" id="srv-add">Dodaj</button></div>
+      <div class="scroll" id="servers"></div>
+    </div>
+    <div class="pane on" id="r-mods">
+      <div class="row"><input type="text" id="q" placeholder="Szukaj, np. Sodium..." spellcheck="false"><button class="btn pri" id="search">Szukaj</button></div>
+      <div class="row" style="margin-top:10px">
+        <select id="type"><option value="mod">Mody</option><option value="shader">Shadery</option><option value="resourcepack">Tekstury</option><option value="modpack">Modpacki</option></select>
+        <select id="sort"><option value="relevance">Trafność</option><option value="downloads">Pobrania</option><option value="updated">Aktualizacja</option></select>
+      </div>
+      <label class="chk"><input type="checkbox" id="compat" checked> Tylko zgodne z wersją i loaderem</label>
+      <p class="sub" id="count"></p>
+      <div class="scroll" id="res"></div>
+      <button class="btn" id="more" style="margin-top:8px;display:none">Załaduj więcej</button>
+    </div>
+  </section>
+</div>
+
+<div class="modal" id="modal-edit" hidden>
+  <div class="modal-box">
+    <h3 id="modal-title">Edytuj instancję</h3>
+    <label for="me-name">Nazwa</label><input type="text" id="me-name" maxlength="60">
+    <label for="me-account">Konto</label><select id="me-account"></select>
+    <label for="me-ram">RAM (GB)</label><input type="number" id="me-ram" min="1" max="32" value="6">
+    <label for="me-java">Ścieżka Javy</label><input type="text" id="me-java" placeholder="Auto" spellcheck="false">
+    <label for="me-jvm">Argumenty JVM</label><input type="text" id="me-jvm" placeholder="-XX:+UseG1GC" spellcheck="false">
+    <div class="row">
+      <div style="flex:1"><label for="me-w">Szerokość</label><input type="number" id="me-w" min="640" value="1280"></div>
+      <div style="flex:1"><label for="me-h">Wysokość</label><input type="number" id="me-h" min="480" value="720"></div>
+    </div>
+    <label class="chk"><input type="checkbox" id="me-full"> Pełny ekran</label>
+    <label class="chk"><input type="checkbox" id="me-min" checked> Minimalizuj launcher</label>
+    <div class="row" style="margin-top:16px">
+      <button class="btn pri w" id="modal-save">Zapisz</button>
+      <button class="btn w" id="modal-cancel">Anuluj</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="modal-backups" hidden>
+  <div class="modal-box wide">
+    <h3>Backupy</h3>
+    <p class="sub" style="margin-bottom:14px">Lista wszystkich backupów ZIP.</p>
+    <div id="backups-list"></div>
+    <div class="row" style="margin-top:16px">
+      <button class="btn w" id="backups-open-folder">Otwórz folder</button>
+      <button class="btn pri w" id="backups-close">Zamknij</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="modal-updates" hidden>
+  <div class="modal-box wide">
+    <h3>Dostępne aktualizacje modów</h3>
+    <div id="updates-list"></div>
+    <div class="row" style="margin-top:16px">
+      <button class="btn pri w" id="updates-apply">Zaktualizuj wszystkie</button>
+      <button class="btn w" id="updates-close">Anuluj</button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script src="features.js"></script>
+</body></html>
