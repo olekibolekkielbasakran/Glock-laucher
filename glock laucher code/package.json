@@ -1,0 +1,95 @@
+{
+  "name": "glock-launcher",
+  "version": "4.3.1",
+  "description": "Glock-launcher - launcher Minecrafta (Windows i Linux)",
+  "author": "Felix <feelix2787@protonmail.com>",
+  "homepage": "https://drive.proton.me/urls/1A0BSM2D0C#g41lwR3pMJ5l",
+  "main": "main.js",
+  "desktopName": "glock-launcher.desktop",
+  "scripts": {
+    "start": "electron .",
+    "start:linux": "electron . --no-sandbox",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder",
+    "dist:win": "electron-builder --win",
+    "dist:linux": "electron-builder --linux",
+    "dist:deb": "electron-builder --linux deb"
+  },
+  "dependencies": {
+    "adm-zip": "^0.5.16",
+    "minecraft-launcher-core": "^3.18.2"
+  },
+  "devDependencies": {
+    "electron": "^31.0.0",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.glock.launcher",
+    "productName": "Glock-launcher",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "index.html",
+      "main.js",
+      "preload.js",
+      "app.js",
+      "features.js",
+      "theme.css",
+      "icon.png",
+      "icon.ico",
+      "bg.png",
+      "bundled-mods/**/*",
+      "node_modules/**/*"
+    ],
+    "win": {
+      "icon": "icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Glock-launcher",
+      "artifactName": "${productName}-Setup-${version}.${ext}"
+    },
+    "linux": {
+      "icon": "icon.png",
+      "category": "Game",
+      "target": [
+        "deb",
+        "AppImage",
+        "tar.gz"
+      ],
+      "executableName": "glock-launcher",
+      "synopsis": "Launcher Minecrafta",
+      "maintainer": "Felix <feelix2787@protonmail.com>",
+      "desktop": {
+        "StartupWMClass": "glock-launcher",
+        "Keywords": "minecraft;launcher;mods;"
+      }
+    },
+    "artifactName": "${productName}-${version}-${os}.${ext}",
+    "electronLanguages": [
+      "en-US",
+      "pl"
+    ],
+    "portable": {
+      "artifactName": "${productName}-${version}-portable.${ext}"
+    }
+  }
+}
